@@ -1,0 +1,244 @@
+Build a Document Management System (DMS) using Spring Boot (backend), PostgreSQL (database), and React (frontend).
+Follow this exact architecture and logic below:
+
+🏗 BACKEND SPECIFICATION (SPRING BOOT + JPA + JWT)
+
+Tech Stack:
+
+Spring Boot
+
+Spring Security (JWT)
+
+Spring Data JPA (PostgreSQL)
+
+Lombok
+
+Maven
+
+Entity Models:
+
+roles
+
+role_id (PK, UUID)
+
+role_name (ADMIN, EMPLOYEE)
+
+
+departments
+
+id (UUID, PK)
+
+name (unique, not null)
+
+employees
+
+employee_id (varchar(20), PK)
+
+name (varchar)
+
+department_id (FK → departments.id)
+
+password (varchar)
+
+role_id (FK → roles.role_id)
+
+created_at (timestamp)
+
+folders
+
+id (UUID, PK)
+
+folder_name (varchar)
+
+folder_type (enum: PERSONAL, DEPT, POLICY)
+
+department_id (nullable FK → departments.id)
+
+employee_id (nullable FK → employees.employee_id)
+
+created_at (timestamp)
+
+files
+
+id (UUID, PK)
+
+folder_id (FK → folders.id)
+
+uploader_id (FK → employees.employee_id)
+
+file_name (original filename)
+
+physical_name (unique generated system filename)
+
+file_url (path or storage URI)
+
+upload_date (timestamp)
+
+last_opened_by (FK → employees.employee_id)
+
+last_opened_at (timestamp)
+
+audit_log
+
+id (UUID, PK)
+
+user_id (FK → employees.employee_id)
+
+action_type (UPLOAD, DOWNLOAD, VIEW, DELETE, LOGIN, ADD_USER, etc.)
+
+entity_type (FILE, FOLDER, USER, DEPARTMENT)
+
+entity_id (UUID or varchar)
+
+description (text)
+
+timestamp (timestamp)
+
+ip_address (optional)
+
+user_agent (optional)
+
+🔐 AUTHENTICATION & ROLES
+
+Use JWT-based authentication.
+
+
+Only Admin can add employees. admin adds the emloyees by givin the password himself for each employee , no computer generated password to be used
+
+Employee credentials are created by admin (with assigned department and role by default employee).
+
+Employees cannot self-register.
+
+⚙️ CORE FUNCTIONALITIES
+
+For Admin:
+
+Login to dashboard.
+
+Add employees (with name,employeeid, dept, password).
+
+View, download, delete all files.
+
+View all employee folders, all department folders, and policy folders.
+
+View complete audit log (with filters).
+
+For Employee:
+
+Login using credentials created by Admin.
+
+Upload and view files in their personal folder.
+
+View and download files from their specific department folder.
+
+Read-only access to policy folder.
+
+Cannot delete files or view others’ personal folders.
+
+File Management Rules:
+
+file_name: original uploaded name.
+
+physical_name: generated (e.g., EMP001_UUID.pdf) to prevent duplication.
+
+file_url: server file path.
+
+On file view/download, update last_opened_by and last_opened_at.
+
+Record every action in audit_log.
+
+🧾 SAMPLE API ROUTES
+
+Authentication:
+
+POST /api/auth/login
+
+POST /api/admin/add-employee (Admin only)
+
+Folders & Files:
+
+GET /api/folders/{type} → Fetch folders by type ie if dept then Sales, finance or marketing if company policy or personal folder that is fetched by employee id
+
+POST /api/files/upload → Upload a file
+
+GET /api/files/download/{id} → Download file
+
+DELETE /api/files/{id} → Delete file (Admin only)
+
+Audit Log:
+
+GET /api/audit → View all system actions (Admin only)
+
+💾 FILE STORAGE LOGIC
+
+Store uploaded files in /uploads/ directory.
+
+Save using physical_name for uniqueness.
+
+Serve downloads with the original filename.
+
+Ensure secure access control on file endpoints (check JWT + role).
+
+
+UI Components:
+
+Login Page
+
+Fields: Employee ID, Password
+
+Validates via /api/auth/login
+
+Employee Dashboard and admin dashboard acording to the role
+
+Tabs: for employee
+
+Personal Folder (upload/download)
+
+Department Folder (view/download)
+
+Policy Folder (read-only and download for employee ) 
+
+File upload modal (calls /api/files/upload)
+
+File list with last opened info
+
+Admin Dashboard
+
+Tabs:
+
+Employee Management (add employee)
+
+Department Files
+
+Employee Folders
+
+Company Policies
+
+Audit Log Viewer (table + filters)
+
+Audit Log View
+
+Table view: user, action_type, entity_type, date
+
+Search & filter by user or date range in backend
+
+🔄 WORKFLOW SUMMARY
+
+Admin logs in → Creates employee accounts.
+
+Employee logs in → Accesses allowed folders.
+
+Employee uploads or views files → Logs actions.
+
+Admin monitors all activities via audit logs.
+
+Role-based access ensures security and separation of privileges.
+
+⚙️ NON-FUNCTIONAL REQUIREMENTS
+
+Authentication: JWT-based
+
+Authorization: Role-based (ADMIN / EMPLOYEE)
+
+Auditability: Every action logged
+
